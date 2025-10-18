@@ -138,6 +138,28 @@ def start_repl(context):
     # Create custom key bindings for better completion behavior
     kb = KeyBindings()
 
+    from prompt_toolkit.keys import Keys
+
+    @kb.add("/")
+    def _(event):
+        """Insert / and start completion with first item selected."""
+        b = event.app.current_buffer
+        b.insert_text("/")
+        # Start completion with first item selected
+        b.start_completion(select_first=True)
+
+    @kb.add(Keys.Any)
+    def _(event):
+        """Handle any character - insert and refresh completion with selection."""
+        b = event.app.current_buffer
+
+        # Insert the character
+        b.insert_text(event.data)
+
+        # If we have / at the start and no space, restart completion with selection
+        if b.text.startswith("/") and " " not in b.text[1:]:
+            b.start_completion(select_first=True)
+
     @kb.add("tab")
     def _(event):
         """Tab completes the current selection or triggers completion."""
@@ -199,7 +221,7 @@ def start_repl(context):
         "message": "> ",  # Simple prompt
         "history": FileHistory(".repl_history"),
         "completer": completer,
-        "complete_while_typing": True,  # Live dropdown as you type
+        "complete_while_typing": False,  # Disabled - we manually trigger with select_first=True
         "complete_in_thread": False,  # Sync completion for faster response
         "style": completion_style,
         "key_bindings": kb,  # Custom key bindings for better completion
@@ -210,33 +232,9 @@ def start_repl(context):
     # Patch click_repl to strip leading / from commands and add separators
     import click_repl._repl as repl_module
     from click_repl import ExitReplException
-    from prompt_toolkit import PromptSession
 
     # Save original function
     original_execute = repl_module._execute_internal_and_sys_cmds
-
-    # Save original PromptSession init to add our hook
-    original_prompt_session_init = PromptSession.__init__
-
-    def patched_prompt_session_init(self, *args, **kwargs):
-        """Patched init to add buffer change handler for auto-selecting first completion."""
-        original_prompt_session_init(self, *args, **kwargs)
-
-        # Add event handler to auto-select first completion when text changes
-        def on_text_changed_handler(_):
-            """Auto-select first completion when text changes."""
-            buffer = self.default_buffer
-            # If completions exist but none selected, select first one
-            if buffer.complete_state:
-                if buffer.complete_state.complete_index is None:
-                    # Select first completion
-                    buffer.complete_state.complete_index = 0
-
-        # Subscribe to the on_text_changed event
-        self.default_buffer.on_text_changed += on_text_changed_handler
-
-    # Temporarily replace PromptSession init
-    PromptSession.__init__ = patched_prompt_session_init
 
     def execute_with_slash_stripping(
         command, allow_internal_commands, allow_system_commands
@@ -325,9 +323,8 @@ def start_repl(context):
         # Clean exit from /quit or /exit command
         sys.exit(0)
     finally:
-        # Restore original functions
+        # Restore original function
         repl_module._execute_internal_and_sys_cmds = original_execute
-        PromptSession.__init__ = original_prompt_session_init
 
 
 # Register commands
