@@ -82,14 +82,22 @@ def config_load(context, file):
         console.print(format_success(f"Configuration loaded from: {file}"))
         console.print()
 
-    except FileNotFoundError as e:
+    except FileNotFoundError:
+        error_msg = f"Config file not found: {file}"
+        console.print(format_error(error_msg))
+        logger.error(error_msg)
+        raise click.Abort()
+
+    except ValueError as e:
+        # Invalid YAML or wrong type
         console.print(format_error(str(e)))
-        logger.error(f"Config file not found: {file}")
+        logger.exception(f"Invalid config file: {file}")
         raise click.Abort()
 
     except Exception as e:
-        console.print(format_error(f"Failed to load config: {str(e)}"))
-        logger.exception(f"Failed to load config: {str(e)}")
+        error_msg = f"Failed to load config: {str(e)}"
+        console.print(format_error(error_msg))
+        logger.exception(error_msg)
         raise click.Abort()
 
 

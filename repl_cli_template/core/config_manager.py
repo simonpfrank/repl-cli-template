@@ -17,7 +17,7 @@ class ConfigManager:
     @staticmethod
     def load(path: str) -> Dict[str, Any]:
         """
-        Load configuration from YAML file.
+        Load configuration from YAML file with validation.
 
         Args:
             path: Path to config file
@@ -28,6 +28,7 @@ class ConfigManager:
         Raises:
             FileNotFoundError: If config file doesn't exist
             yaml.YAMLError: If config file is invalid YAML
+            ValueError: If config is not a dictionary
         """
         config_path = Path(path)
 
@@ -36,18 +37,24 @@ class ConfigManager:
             raise FileNotFoundError(f"Config file not found: {path}")
 
         try:
-            with open(config_path, "r") as f:
+            with open(config_path, "r", encoding="utf-8") as f:
                 config = yaml.safe_load(f)
 
             if config is None:
                 config = {}
 
+            # Validate that config is a dictionary
+            if not isinstance(config, dict):
+                raise ValueError(
+                    f"Config must be a dictionary, got {type(config).__name__}"
+                )
+
             logger.info(f"Config loaded from: {path}")
             return config
 
-        except yaml.YAMLError:
+        except yaml.YAMLError as e:
             logger.exception(f"Invalid YAML in config file: {path}")
-            raise
+            raise ValueError(f"Invalid YAML in config file: {path}") from e
 
     @staticmethod
     def save(config: Dict[str, Any], path: str) -> None:
@@ -62,7 +69,7 @@ class ConfigManager:
         config_path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
-            with open(config_path, "w") as f:
+            with open(config_path, "w", encoding="utf-8") as f:
                 yaml.dump(config, f, default_flow_style=False, sort_keys=False)
 
             logger.info(f"Config saved to: {path}")
@@ -109,6 +116,9 @@ class ConfigManager:
             key: Dot-separated key path (e.g., 'logging.level')
             value: Value to set
 
+        Raises:
+            ValueError: If intermediate key is not a dictionary
+
         Example:
             >>> config = {}
             >>> ConfigManager.set(config, 'logging.level', 'DEBUG')
@@ -122,6 +132,11 @@ class ConfigManager:
         for k in keys[:-1]:
             if k not in current:
                 current[k] = {}
+            elif not isinstance(current[k], dict):
+                raise ValueError(
+                    f"Cannot set {key}: '{k}' is not a dictionary "
+                    f"(got {type(current[k]).__name__})"
+                )
             current = current[k]
 
         # Set the final key
@@ -144,6 +159,11 @@ class ConfigManager:
                 "console_enabled": False,
             },
             "paths": {"input_dir": "data/input", "output_dir": "data/output"},
+            "agent": {
+                "enabled": False,  # EXPERIMENTAL: Agent mode not fully implemented
+                "model": "gpt-4",
+                "api_key_env": "OPENAI_API_KEY",
+            },
             "custom": {
                 # Project-specific settings go here
             },

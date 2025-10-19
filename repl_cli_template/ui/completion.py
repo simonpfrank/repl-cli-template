@@ -2,7 +2,7 @@
 Custom auto-completion for REPL (Claude Code style).
 """
 
-from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.completion import Completer, Completion, CompleteEvent
 from prompt_toolkit.document import Document
 from typing import Iterable, Optional, Any
 
@@ -32,7 +32,7 @@ class SlashCommandCompleter(Completer):
         self.cli_group = cli_group
 
     def get_completions(
-        self, document: Document, complete_event
+        self, document: Document, complete_event: CompleteEvent
     ) -> Iterable[Completion]:
         """
         Get completions for the current input.

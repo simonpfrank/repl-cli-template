@@ -82,4 +82,4 @@ def show_goodbye(console: Console) -> None:
         console: Rich console instance
     """
     console.print()
-    console.print("[bold yellow]Goodbye! 👋[/bold yellow]")
+    console.print("[bold yellow]Goodbye![/bold yellow]")

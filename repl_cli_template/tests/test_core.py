@@ -40,10 +40,11 @@ class TestProcessor:
         """Test processing with non-existent file."""
         config = {}
 
-        with pytest.raises(FileNotFoundError) as exc_info:
+        # Non-existent files raise ValueError (invalid path)
+        with pytest.raises(ValueError) as exc_info:
             process_data("nonexistent.txt", config)
 
-        assert "not found" in str(exc_info.value).lower()
+        assert "invalid input path" in str(exc_info.value).lower()
 
 
 class TestConfigManager:

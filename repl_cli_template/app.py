@@ -3,12 +3,14 @@ Main entry point for REPL/CLI application.
 """
 
 import click
+import logging
+import sys
+from pathlib import Path
+
 from click_repl import repl
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.styles import Style
 from rich.console import Console
-import sys
-from pathlib import Path
 
 from repl_cli_template.core.config_manager import ConfigManager
 from repl_cli_template.core.logging_setup import setup_logging
@@ -29,6 +31,10 @@ console = Console(theme=APP_THEME)
 APP_NAME = "REPL CLI Template"
 APP_VERSION = "1.0.0"
 DEFAULT_CONFIG = "config.yaml"
+
+# REPL UI constants
+COMPLETION_MENU_HEIGHT = 8  # Number of lines reserved for completion menu
+CONSOLE_LOG_LEVEL = logging.WARNING  # Log level for console in CLI mode
 
 
 @click.group(invoke_without_command=True)
@@ -76,7 +82,7 @@ def cli(context, config, repl_mode):
         start_repl(context)
 
 
-def get_command_names(cli_group):
+def get_command_names(cli_group: click.Group) -> list[str]:
     """
     Get all command names from the CLI group.
 
@@ -86,15 +92,25 @@ def get_command_names(cli_group):
     Returns:
         List of command names
     """
-    names = []
+    names: list[str] = []
     if hasattr(cli_group, "commands"):
         for name in cli_group.commands.keys():
             names.append(name)
     return names
 
 
-def start_repl(context):
-    """Start the REPL interface with / prefix support and auto-completion."""
+def start_repl(context: click.Context) -> None:
+    """
+    Start the REPL interface with / prefix support and auto-completion.
+
+    Args:
+        context: Click context object containing config and other shared state
+
+    Raises:
+        KeyboardInterrupt: When user presses Ctrl+C
+        EOFError: When user presses Ctrl+D
+        ExitReplException: When user runs /quit or /exit
+    """
     # Show welcome screen
     config_dict = context.obj["config"]
     config_file = context.obj["config_file"]
@@ -149,20 +165,37 @@ def start_repl(context):
         "style": completion_style,
         "key_bindings": kb,  # Empty key bindings - use defaults
         "complete_style": "COLUMN",  # Single column - one command per line
-        "reserve_space_for_menu": 8,  # Reserve space for completion menu
+        "reserve_space_for_menu": COMPLETION_MENU_HEIGHT,
     }
 
     # Patch click_repl to strip leading / from commands and add separators
     import click_repl._repl as repl_module
     from click_repl import ExitReplException
 
+    # Defensive check: verify the function we're patching exists
+    if not hasattr(repl_module, "_execute_internal_and_sys_cmds"):
+        raise RuntimeError(
+            "click_repl API has changed. This template requires click-repl>=0.3.0,<0.4.0. "
+            "Please check requirements.txt and update the monkey-patch code."
+        )
+
     # Save original function
     original_execute = repl_module._execute_internal_and_sys_cmds
 
     def execute_with_slash_stripping(
-        command, allow_internal_commands, allow_system_commands
-    ):
-        """Wrapper that strips leading / before processing command."""
+        command: str, allow_internal_commands: bool, allow_system_commands: bool
+    ) -> None:
+        """
+        Wrapper that strips leading / before processing command.
+
+        WARNING: This is a monkey-patch of click_repl and may break with library updates.
+        Pin click-repl version in requirements.txt.
+
+        Args:
+            command: Command string to execute
+            allow_internal_commands: Whether to allow internal commands
+            allow_system_commands: Whether to allow system commands
+        """
         # Check if agent mode is enabled
         agent_enabled = ConfigManager.get(config_dict, "agent.enabled", False)
 
