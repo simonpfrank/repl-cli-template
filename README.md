@@ -5,8 +5,8 @@ A Python template for building applications with unified REPL (Read-Eval-Print L
 ## Features
 
 - **Unified Architecture**: Same commands work in both REPL and CLI modes
-- **Smart Auto-Completion**: Claude Code-style slash commands with live filtering, subcommand and option completion
-- **Beautiful UI**: Colorful terminal output with ASCII art welcome screen
+- **Smart Auto-Completion**: Claude Code-style slash commands with live filtering, subcommand and option completion. Not completely Claude Code style due to prompt-toolkit limits
+- **Prettified UI**: Colorful terminal output with ASCII art welcome screen
 - **Config Management**: YAML-based configuration with override hierarchy
 - **Structured Logging**: Non-intrusive logging with detailed error tracking
 - **Testable**: Framework-agnostic core logic, easy to test without UI
@@ -165,7 +165,7 @@ cli.add_command(my_command, name='my_command')
 
 ### 2. Adding Business Logic
 
-Add your core logic in `core/` folder:
+Add your core logic in `core/` folder (or use you own structure with import modifications:
 
 ```python
 # core/my_module.py
@@ -307,6 +307,9 @@ custom:
 6. **Visual Appeal**: Rich formatting is not optional
 
 ## Development Tips
+
+### Click issues with click-repl
+currently click 8.2+ causes issues with click-repl so limited to click 8.1
 
 ### Adding Dependencies
 
