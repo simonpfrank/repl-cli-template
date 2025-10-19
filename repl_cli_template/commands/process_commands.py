@@ -4,14 +4,27 @@ Business logic commands - example processing command.
 
 import click
 import logging
+
 from rich.console import Console
 from rich.table import Table
 
 from repl_cli_template.core.processor import process_data
 from repl_cli_template.ui.styles import APP_THEME, format_success, format_error
 
-console = Console(theme=APP_THEME)
 logger = logging.getLogger(__name__)
+
+
+def _get_console(context: click.Context) -> Console:
+    """
+    Get console from context with fallback.
+
+    Args:
+        context: Click context object
+
+    Returns:
+        Console instance from context, or new instance if not found
+    """
+    return context.obj.get("console", Console(theme=APP_THEME))
 
 
 @click.command()
@@ -20,6 +33,8 @@ logger = logging.getLogger(__name__)
 @click.pass_context
 def process(context, input_file, output):
     """Process data from input file (example command)."""
+    console = _get_console(context)
+
     try:
         # Get config from context
         config = context.obj.get("config", {})

@@ -51,6 +51,9 @@ def cli(context, config, repl_mode):
     # Initialize context object
     context.ensure_object(dict)
 
+    # Add console to context for dependency injection
+    context.obj["console"] = console
+
     # Load configuration
     try:
         if Path(config).exists():

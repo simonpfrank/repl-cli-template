@@ -4,10 +4,11 @@ Configuration management commands.
 
 import click
 import logging
+import yaml
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.syntax import Syntax
-import yaml
 
 from repl_cli_template.core.config_manager import ConfigManager
 from repl_cli_template.ui.styles import (
@@ -17,8 +18,20 @@ from repl_cli_template.ui.styles import (
     format_info,
 )
 
-console = Console(theme=APP_THEME)
 logger = logging.getLogger(__name__)
+
+
+def _get_console(context: click.Context) -> Console:
+    """
+    Get console from context with fallback.
+
+    Args:
+        context: Click context object
+
+    Returns:
+        Console instance from context, or new instance if not found
+    """
+    return context.obj.get("console", Console(theme=APP_THEME))
 
 
 @click.group()
@@ -31,6 +44,8 @@ def config():
 @click.pass_context
 def config_show(context):
     """Display current configuration."""
+    console = _get_console(context)
+
     try:
         config_dict = context.obj.get("config", {})
 
@@ -67,6 +82,8 @@ def config_show(context):
 @click.pass_context
 def config_load(context, file):
     """Load configuration from YAML file."""
+    console = _get_console(context)
+
     try:
         # Load config
         config_dict = ConfigManager.load(file)
@@ -106,6 +123,8 @@ def config_load(context, file):
 @click.pass_context
 def config_save(context, file):
     """Save current configuration to YAML file."""
+    console = _get_console(context)
+
     try:
         config_dict = context.obj.get("config", {})
 
@@ -134,6 +153,8 @@ def config_save(context, file):
 @click.pass_context
 def config_set(context, key, value):
     """Set a configuration value."""
+    console = _get_console(context)
+
     try:
         config_dict = context.obj.get("config", {})
 
