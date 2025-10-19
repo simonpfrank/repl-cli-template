@@ -116,19 +116,15 @@ def start_repl(context):
 
     completer = SlashCommandCompleter(commands_dict)
 
-    # Custom style for completion dropdown (Claude Code exact colors from images)
-    # Image 1: Unhighlighted command text color
-    # Image 2: Highlighted command font color
-    # Image 3: Unhighlighted help text color
-    # Image 4: Highlighted help text color
+    # Custom style for completion dropdown - transparent backgrounds, bright highlight
     completion_style = Style.from_dict(
         {
-            "completion-menu": "bg:#1e1e1e",  # Dark background for menu
-            "completion-menu.completion": "bg:#2d2d2d #5fafff",  # Unhighlighted: dark gray bg, blue text
-            "completion-menu.completion.current": "bg:#0a7aca #ffffff",  # Highlighted: blue bg, white text
-            "completion-menu.meta": "bg:#1e1e1e",  # Dark background for meta
-            "completion-menu.meta.completion": "bg:#2d2d2d #808080",  # Unhighlighted help: dark gray bg, gray text
-            "completion-menu.meta.completion.current": "bg:#0a7aca #e0e0e0",  # Highlighted help: blue bg, light gray text
+            "completion-menu": "",  # No background
+            "completion-menu.completion": "noinherit #5fafff",  # Unhighlighted command: blue, transparent bg
+            "completion-menu.completion.current": "noinherit #00ffff bold",  # Highlighted: bright cyan, bold, transparent bg
+            "completion-menu.meta": "",  # No background for meta area
+            "completion-menu.meta.completion": "noinherit #808080",  # Unhighlighted help: gray, transparent bg
+            "completion-menu.meta.completion.current": "noinherit #ffffff",  # Highlighted help: white, transparent bg
         }
     )
 
