@@ -111,10 +111,10 @@ def start_repl(context):
         for name, cmd in context.command.commands.items():
             commands_dict[name] = cmd.help or "No description"
 
-    # Create custom completer (Claude Code style)
+    # Create custom completer with Click CLI group for subcommand support
     from repl_cli_template.ui.completion import SlashCommandCompleter
 
-    completer = SlashCommandCompleter(commands_dict)
+    completer = SlashCommandCompleter(commands_dict, cli_group=context.command)
 
     # Custom style for completion dropdown - transparent backgrounds, bright highlight
     completion_style = Style.from_dict(
@@ -193,9 +193,26 @@ def start_repl(context):
         except click.exceptions.ClickException as e:
             # Handle Click exceptions (missing args, bad options, etc.) gracefully
             console.print()
-            console.print(f"[red]Error:[/red] {e.format_message()}")
+            error_message = e.format_message()
+            console.print(f"[red]Error:[/red] {error_message}")
+
+            # Extract option names from error message if it's a missing option error
+            if "Missing option" in error_message:
+                # Try to extract the option names from the error (e.g., '--file' / '-f')
+                import re
+
+                option_match = re.search(r"'([^']+)'", error_message)
+                if option_match:
+                    option_name = option_match.group(1)
+                    console.print()
+                    console.print(
+                        f"[dim]Example:[/dim] [cyan]/{command} {option_name} <value>[/cyan]"
+                    )
+
             console.print()
-            console.print(f"[dim]Try:[/dim] [cyan]/{command} --help[/cyan] for usage")
+            console.print(
+                f"[dim]For full usage:[/dim] [cyan]/{command.split()[0]} --help[/cyan]"
+            )
             console.print()
             return None
 

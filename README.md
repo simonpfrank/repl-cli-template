@@ -5,6 +5,7 @@ A Python template for building applications with unified REPL (Read-Eval-Print L
 ## Features
 
 - **Unified Architecture**: Same commands work in both REPL and CLI modes
+- **Smart Auto-Completion**: Claude Code-style slash commands with live filtering, subcommand and option completion
 - **Beautiful UI**: Colorful terminal output with ASCII art welcome screen
 - **Config Management**: YAML-based configuration with override hierarchy
 - **Structured Logging**: Non-intrusive logging with detailed error tracking
@@ -45,6 +46,22 @@ python -m repl_cli_template.app process --input data.txt
 python -m repl_cli_template.app --help
 python -m repl_cli_template.app process --help
 ```
+
+## Auto-Completion
+
+The REPL features smart auto-completion inspired by Claude Code:
+
+- **Type `/`** to see all available commands
+- **Keep typing** to filter commands (e.g., `/con` shows only `/config`)
+- **Press Space** to complete the highlighted command
+- **Subcommands**: After typing `/config `, see subcommands like `show`, `load`, `save`, `set`
+- **Options**: After `/config load `, see available options like `--file`
+- **Backspace** automatically refilters the list
+
+Auto-completion works for:
+- Top-level commands (`/help`, `/config`, `/process`)
+- Subcommands (`/config show`, `/config load`)
+- Command options (`/config load --file`)
 
 ## Usage Examples
 
@@ -101,6 +118,7 @@ repl_cli_template/
 │   ├── logging_setup.py     # Logging configuration
 │   └── processor.py         # Example business logic
 ├── ui/                      # REPL UI components
+│   ├── completion.py        # Auto-completion for slash commands
 │   ├── welcome.py           # Welcome screen, ASCII art
 │   └── styles.py            # Rich themes and styles
 └── tests/                   # Unit and integration tests

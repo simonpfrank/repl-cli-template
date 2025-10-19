@@ -157,6 +157,35 @@ def process(context, input):
 
 ---
 
+### 8. Auto-Completion Strategy ✅
+
+**Decision**: Claude Code-style slash command completion with live filtering
+
+**Implementation**:
+- Custom `SlashCommandCompleter` using prompt_toolkit
+- Completions appear as you type after `/`
+- Live filtering as more characters are typed
+- Backspace automatically refilters
+- Support for subcommands (e.g., `/config show`)
+- Support for options (e.g., `/config load --file`)
+- Prefer long-form options (`--file`) over short (`-f`) when both exist
+- Single column layout (one command per line)
+- No background colors, bright highlighting for selected item
+
+**Design Decisions**:
+- Use standard prompt_toolkit behavior (`complete_while_typing=True`)
+- No custom key bindings - use defaults (Tab, Enter, Arrow keys, Backspace)
+- Accept that completions insert text (don't fight the framework)
+- Transparent backgrounds with colored text for better visibility
+
+**Rationale**:
+- Claude Code provides excellent UX model
+- Fighting prompt_toolkit defaults creates more problems than it solves
+- Standard behavior is predictable and well-tested
+- Auto-discovery of subcommands and options from Click command structure
+
+---
+
 ## Design Principles
 
 1. **Define once, use everywhere**: Commands work in REPL, CLI, and future API/Web

@@ -68,7 +68,9 @@ def show_welcome(
     # Status information
     console.print(f"[dim]Config loaded:[/dim] [cyan]{config_file}[/cyan]")
     console.print(f"[dim]Logging to:[/dim] [cyan]{log_file}[/cyan]")
-    console.print("[bold green]Ready![/bold green]")
+    console.print(
+        "[bold green]Ready![/bold green] [dim](/ for commands and space for sub commands)[/dim]"
+    )
     console.print()
 
 
