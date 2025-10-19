@@ -135,96 +135,23 @@ def start_repl(context):
     # Configure prompt_toolkit with history, auto-completion, and styling
     from prompt_toolkit.key_binding import KeyBindings
 
-    # Create custom key bindings for better completion behavior
+    # No custom key bindings - use prompt_toolkit defaults
+    # This gives us standard, predictable completion behavior:
+    # - Tab: accept completion
+    # - Arrows: navigate
+    # - Enter: accept completion (if showing) then submit
+    # - Backspace: auto-refilters
     kb = KeyBindings()
-
-    from prompt_toolkit.keys import Keys
-
-    @kb.add("/")
-    def _(event):
-        """Insert / and start completion with first item selected."""
-        b = event.app.current_buffer
-        b.insert_text("/")
-        # Start completion with first item selected
-        b.start_completion(select_first=True)
-
-    @kb.add(Keys.Any)
-    def _(event):
-        """Handle any character - insert and refresh completion with selection."""
-        b = event.app.current_buffer
-
-        # Insert the character
-        b.insert_text(event.data)
-
-        # If we have / at the start and no space, restart completion with selection
-        if b.text.startswith("/") and " " not in b.text[1:]:
-            b.start_completion(select_first=True)
-
-    @kb.add("tab")
-    def _(event):
-        """Tab completes the current selection or triggers completion."""
-        b = event.app.current_buffer
-        if b.complete_state:
-            b.complete_next()
-        else:
-            b.start_completion(select_first=True)
-
-    @kb.add("down")
-    def _(event):
-        """Down arrow navigates through completions."""
-        b = event.app.current_buffer
-        if b.complete_state:
-            b.complete_next()
-        else:
-            b.start_completion(select_first=True)
-
-    @kb.add("up")
-    def _(event):
-        """Up arrow navigates through completions."""
-        b = event.app.current_buffer
-        if b.complete_state:
-            b.complete_previous()
-        else:
-            b.start_completion(select_first=True)
-
-    @kb.add("space")
-    def _(event):
-        """Space completes the highlighted command and adds space for arguments."""
-        b = event.app.current_buffer
-        if b.complete_state:
-            # If completion menu is showing, apply the current completion
-            completion = b.complete_state.current_completion
-            if completion:
-                b.apply_completion(completion)
-                b.cancel_completion()
-        # Always insert space
-        b.insert_text(" ")
-
-    @kb.add("enter")
-    def _(event):
-        """Enter accepts completion if menu is showing, then submits the command."""
-        b = event.app.current_buffer
-        if b.complete_state:
-            # If completion menu is showing, apply the current (highlighted) completion
-            completion = b.complete_state.current_completion
-            if completion:
-                b.apply_completion(completion)
-                # After applying completion, cancel completion state and submit
-                b.cancel_completion()
-                b.validate_and_handle()
-                return
-        # Otherwise, just submit the buffer
-        b.validate_and_handle()
 
     # Custom prompt - just "> " with separator handled separately
     prompt_kwargs = {
         "message": "> ",  # Simple prompt
         "history": FileHistory(".repl_history"),
         "completer": completer,
-        "complete_while_typing": False,  # Disabled - we manually trigger with select_first=True
+        "complete_while_typing": True,  # Show completions as you type (standard behavior)
         "complete_in_thread": False,  # Sync completion for faster response
         "style": completion_style,
-        "key_bindings": kb,  # Custom key bindings for better completion
+        "key_bindings": kb,  # Empty key bindings - use defaults
         "complete_style": "COLUMN",  # Single column - one command per line
         "reserve_space_for_menu": 8,  # Reserve space for completion menu
     }
@@ -239,7 +166,7 @@ def start_repl(context):
     def execute_with_slash_stripping(
         command, allow_internal_commands, allow_system_commands
     ):
-        """Wrapper that strips leading / before processing command and adds separators."""
+        """Wrapper that strips leading / before processing command."""
         # Check if agent mode is enabled
         agent_enabled = ConfigManager.get(config_dict, "agent.enabled", False)
 
@@ -256,8 +183,6 @@ def start_repl(context):
                 )
                 console.print("[dim](Agent integration not yet implemented)[/dim]")
                 console.print()
-                console.print("[dim]" + "─" * console.width + "[/dim]")
-                console.print()
                 return None
 
         # Try to execute the command
@@ -265,9 +190,8 @@ def start_repl(context):
             result = original_execute(
                 command, allow_internal_commands, allow_system_commands
             )
-            # Print separator below the output (above next prompt)
+            # Just add blank line after output for spacing
             console.print()
-            console.print("[dim]" + "─" * console.width + "[/dim]")
             return result
 
         except click.exceptions.ClickException as e:

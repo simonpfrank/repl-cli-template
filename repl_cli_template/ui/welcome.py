@@ -70,8 +70,6 @@ def show_welcome(
     console.print(f"[dim]Logging to:[/dim] [cyan]{log_file}[/cyan]")
     console.print("[bold green]Ready![/bold green]")
     console.print()
-    console.print("─" * console.width)
-    console.print()
 
 
 def show_goodbye(console: Console) -> None:
